@@ -1,843 +1,223 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover"
-  />
-  <meta name="theme-color" content="#f2f2f7" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="Memory Test Pro" />
-  <meta
-    name="description"
-    content="Memory Test Pro - A minimal Simon Says-style memory game."
-  />
-
-  <title>Memory Test Pro</title>
-
-  <style>
-    :root {
-      --background: #f2f2f7;
-      --surface: rgba(255, 255, 255, 0.82);
-      --surface-strong: #ffffff;
-      --surface-soft: rgba(255, 255, 255, 0.58);
-      --separator: rgba(60, 60, 67, 0.12);
-
-      --text-primary: #111113;
-      --text-secondary: rgba(60, 60, 67, 0.72);
-      --text-tertiary: rgba(60, 60, 67, 0.46);
-
-      --blue: #0a84ff;
-      --green: #30d158;
-      --red: #ff453a;
-      --yellow: #ffd60a;
-      --orange: #ff9f0a;
-
-      --shadow-large: 0 28px 70px rgba(30, 30, 35, 0.14);
-      --shadow-small: 0 12px 30px rgba(30, 30, 35, 0.09);
-    }
-
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --background: #000000;
-        --surface: rgba(28, 28, 30, 0.84);
-        --surface-strong: #1c1c1e;
-        --surface-soft: rgba(44, 44, 46, 0.72);
-        --separator: rgba(255, 255, 255, 0.10);
-
-        --text-primary: #ffffff;
-        --text-secondary: rgba(235, 235, 245, 0.72);
-        --text-tertiary: rgba(235, 235, 245, 0.44);
-
-        --shadow-large: 0 28px 80px rgba(0, 0, 0, 0.55);
-        --shadow-small: 0 14px 34px rgba(0, 0, 0, 0.32);
-      }
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html {
-      min-height: 100%;
-      background: var(--background);
-      -webkit-text-size-adjust: 100%;
-      text-size-adjust: 100%;
-    }
-
-    body {
-      min-height: 100svh;
-      overflow-x: hidden;
-      color: var(--text-primary);
-      background:
-        radial-gradient(
-          circle at 15% 0%,
-          rgba(10, 132, 255, 0.13),
-          transparent 31%
-        ),
-        radial-gradient(
-          circle at 88% 100%,
-          rgba(48, 209, 88, 0.09),
-          transparent 29%
-        ),
-        var(--background);
-      font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "SF Pro Display",
-        "SF Pro Text",
-        "Helvetica Neue",
-        Arial,
-        sans-serif;
-      -webkit-font-smoothing: antialiased;
-      text-rendering: optimizeLegibility;
-      overscroll-behavior: none;
-    }
-
-    button {
-      font: inherit;
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
-    }
-
-    .page {
-      min-height: 100svh;
-      display: grid;
-      place-items: center;
-      padding:
-        max(18px, env(safe-area-inset-top))
-        max(14px, env(safe-area-inset-right))
-        max(24px, env(safe-area-inset-bottom))
-        max(14px, env(safe-area-inset-left));
-    }
-
-    .app {
-      position: relative;
-      width: min(100%, 760px);
-      overflow: hidden;
-      padding: clamp(18px, 4vw, 34px);
-      border: 1px solid var(--separator);
-      border-radius: 32px;
-      background: var(--surface);
-      box-shadow: var(--shadow-large);
-      backdrop-filter: saturate(180%) blur(28px);
-      -webkit-backdrop-filter: saturate(180%) blur(28px);
-      transform: translateZ(0);
-    }
-
-    .topbar {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 20px;
-    }
-
-    .eyebrow {
-      margin-bottom: 6px;
-      color: var(--blue);
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.095em;
-      text-transform: uppercase;
-    }
-
-    h1 {
-      font-size: clamp(2.05rem, 8vw, 3.45rem);
-      font-weight: 760;
-      line-height: 0.98;
-      letter-spacing: -0.055em;
-    }
-
-    .icon-button {
-      width: 46px;
-      height: 46px;
-      flex: 0 0 46px;
-      display: grid;
-      place-items: center;
-      border: 1px solid var(--separator);
-      border-radius: 50%;
-      color: var(--text-primary);
-      background: var(--surface-soft);
-      box-shadow: var(--shadow-small);
-      cursor: pointer;
-      transition:
-        transform 140ms ease,
-        background 140ms ease;
-    }
-
-    .icon-button:active {
-      transform: scale(0.94);
-    }
-
-    .icon-button svg {
-      width: 20px;
-      height: 20px;
-      fill: currentColor;
-    }
-
-    .subtitle {
-      margin-bottom: 18px;
-      color: var(--text-secondary);
-      font-size: 1rem;
-      line-height: 1.58;
-    }
-
-    .progress-card {
-      margin-bottom: 14px;
-      padding: 14px;
-      border: 1px solid var(--separator);
-      border-radius: 18px;
-      background: var(--surface-soft);
-    }
-
-    .progress-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 9px;
-    }
-
-    .progress-label {
-      color: var(--text-secondary);
-      font-size: 0.83rem;
-      font-weight: 650;
-    }
-
-    .progress-value {
-      color: var(--text-primary);
-      font-size: 0.83rem;
-      font-weight: 700;
-    }
-
-    .progress-track {
-      height: 7px;
-      overflow: hidden;
-      border-radius: 999px;
-      background: rgba(120, 120, 128, 0.16);
-    }
-
-    .progress-fill {
-      width: 0%;
-      height: 100%;
-      border-radius: inherit;
-      background: linear-gradient(90deg, var(--blue), #5ac8fa);
-      transition: width 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-
-    .stat {
-      min-width: 0;
-      padding: 13px 9px;
-      text-align: center;
-      border: 1px solid var(--separator);
-      border-radius: 16px;
-      background: var(--surface-soft);
-    }
-
-    .stat-label {
-      display: block;
-      margin-bottom: 4px;
-      color: var(--text-tertiary);
-      font-size: 0.66rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .stat-value {
-      display: block;
-      overflow: hidden;
-      color: var(--text-primary);
-      font-size: 1.08rem;
-      font-weight: 740;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .stat-value.pop {
-      animation: numberPop 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
-    }
-
-    .message {
-      min-height: 66px;
-      display: grid;
-      place-items: center;
-      margin-bottom: 16px;
-      padding: 13px 16px;
-      text-align: center;
-      color: var(--text-secondary);
-      line-height: 1.42;
-      border: 1px solid var(--separator);
-      border-radius: 20px;
-      background: var(--surface-soft);
-      transition:
-        color 180ms ease,
-        background 180ms ease,
-        border-color 180ms ease;
-    }
-
-    .message.info {
-      color: var(--blue);
-      border-color: rgba(10, 132, 255, 0.18);
-      background: rgba(10, 132, 255, 0.08);
-    }
-
-    .message.success {
-      color: var(--green);
-      border-color: rgba(48, 209, 88, 0.20);
-      background: rgba(48, 209, 88, 0.08);
-    }
-
-    .message.warning {
-      color: var(--orange);
-      border-color: rgba(255, 159, 10, 0.20);
-      background: rgba(255, 159, 10, 0.08);
-    }
-
-    .message.error {
-      color: var(--red);
-      border-color: rgba(255, 69, 58, 0.20);
-      background: rgba(255, 69, 58, 0.08);
-    }
-
-    .board-shell {
-      position: relative;
-      margin-bottom: 18px;
-    }
-
-    .board {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: clamp(12px, 3vw, 17px);
-    }
-
-    .pad {
-      position: relative;
-      min-height: clamp(128px, 29vw, 205px);
-      overflow: hidden;
-      border: 0;
-      border-radius: 27px;
-      cursor: pointer;
-      opacity: 0.72;
-      user-select: none;
-      -webkit-user-select: none;
-      box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.28),
-        0 13px 30px rgba(0, 0, 0, 0.11);
-      transition:
-        transform 135ms ease,
-        filter 135ms ease,
-        opacity 135ms ease,
-        box-shadow 135ms ease;
-    }
-
-    .pad::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background: linear-gradient(
-        145deg,
-        rgba(255, 255, 255, 0.30),
-        transparent 49%,
-        rgba(0, 0, 0, 0.10)
-      );
-    }
-
-    .pad:disabled {
-      cursor: default;
-    }
-
-    .pad:active:not(:disabled),
-    .pad.user-active {
-      transform: scale(0.965);
-      opacity: 1;
-      filter: brightness(1.13);
-    }
-
-    .pad.active {
-      z-index: 2;
-      opacity: 1;
-      transform: scale(1.025);
-      filter: brightness(1.58) saturate(1.04);
-      box-shadow:
-        0 0 0 5px rgba(255, 255, 255, 0.32),
-        0 0 48px currentColor,
-        inset 0 0 26px rgba(255, 255, 255, 0.24);
-    }
-
-    .pad.correct {
-      animation: correctPulse 520ms ease;
-    }
-
-    .red {
-      color: var(--red);
-      background: var(--red);
-    }
-
-    .blue {
-      color: var(--blue);
-      background: var(--blue);
-    }
-
-    .green {
-      color: var(--green);
-      background: var(--green);
-    }
-
-    .yellow {
-      color: var(--yellow);
-      background: var(--yellow);
-    }
-
-    .success-halo {
-      position: absolute;
-      inset: -8px;
-      z-index: 5;
-      pointer-events: none;
-      border: 3px solid rgba(48, 209, 88, 0.0);
-      border-radius: 34px;
-      opacity: 0;
-    }
-
-    .success-halo.show {
-      animation: haloPulse 720ms ease;
-    }
-
-    .controls {
-      display: grid;
-      gap: 12px;
-    }
-
-    .start-button {
-      min-height: 56px;
-      padding: 0 22px;
-      border: 0;
-      border-radius: 18px;
-      color: #ffffff;
-      background: var(--blue);
-      font-weight: 720;
-      cursor: pointer;
-      box-shadow: 0 11px 26px rgba(10, 132, 255, 0.24);
-      transition:
-        transform 140ms ease,
-        opacity 140ms ease;
-    }
-
-    .start-button:active:not(:disabled) {
-      transform: scale(0.98);
-    }
-
-    .start-button:disabled {
-      opacity: 0.48;
-      cursor: not-allowed;
-    }
-
-    .segmented {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 3px;
-      padding: 4px;
-      border: 1px solid var(--separator);
-      border-radius: 15px;
-      background: rgba(120, 120, 128, 0.11);
-    }
-
-    .segment {
-      min-height: 40px;
-      border: 0;
-      border-radius: 11px;
-      color: var(--text-secondary);
-      background: transparent;
-      font-size: 0.88rem;
-      font-weight: 620;
-      cursor: pointer;
-      transition:
-        color 150ms ease,
-        background 150ms ease,
-        box-shadow 150ms ease;
-    }
-
-    .segment.active {
-      color: var(--text-primary);
-      background: var(--surface-strong);
-      box-shadow: 0 2px 9px rgba(0, 0, 0, 0.10);
-    }
-
-    .segment:disabled {
-      cursor: default;
-      opacity: 0.55;
-    }
-
-    .help {
-      margin-top: 16px;
-      overflow: hidden;
-      border: 1px solid var(--separator);
-      border-radius: 20px;
-      background: var(--surface-soft);
-    }
-
-    .help summary {
-      min-height: 52px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 16px;
-      cursor: pointer;
-      font-weight: 650;
-      list-style: none;
-    }
-
-    .help summary::after {
-      content: "›";
-      color: var(--text-tertiary);
-      font-size: 1.45rem;
-      font-weight: 400;
-      transform: rotate(90deg);
-      transition: transform 180ms ease;
-    }
-
-    .help[open] summary::after {
-      transform: rotate(-90deg);
-    }
-
-    .help summary::-webkit-details-marker {
-      display: none;
-    }
-
-    .help p {
-      padding: 0 16px 16px;
-      color: var(--text-secondary);
-      font-size: 0.93rem;
-      line-height: 1.65;
-    }
-
-    .footer {
-      margin-top: 16px;
-      text-align: center;
-      color: var(--text-tertiary);
-      font-size: 0.75rem;
-    }
-
-    .sheet-backdrop {
-      position: fixed;
-      inset: 0;
-      z-index: 30;
-      display: grid;
-      align-items: end;
-      padding:
-        14px
-        max(14px, env(safe-area-inset-right))
-        max(14px, env(safe-area-inset-bottom))
-        max(14px, env(safe-area-inset-left));
-      background: rgba(0, 0, 0, 0.34);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 180ms ease;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-    }
-
-    .sheet-backdrop.visible {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .sheet {
-      width: min(100%, 560px);
-      margin: 0 auto;
-      padding: 20px;
-      border: 1px solid var(--separator);
-      border-radius: 28px;
-      background: var(--surface-strong);
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.30);
-      transform: translateY(28px);
-      transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
-    }
-
-    .sheet-backdrop.visible .sheet {
-      transform: translateY(0);
-    }
-
-    .sheet-handle {
-      width: 38px;
-      height: 5px;
-      margin: 0 auto 18px;
-      border-radius: 999px;
-      background: var(--separator);
-    }
-
-    .sheet-icon {
-      width: 58px;
-      height: 58px;
-      display: grid;
-      place-items: center;
-      margin-bottom: 15px;
-      border-radius: 18px;
-      font-size: 1.7rem;
-      background: rgba(10, 132, 255, 0.10);
-    }
-
-    .sheet-icon.success {
-      background: rgba(48, 209, 88, 0.12);
-    }
-
-    .sheet h2 {
-      margin-bottom: 8px;
-      font-size: 1.72rem;
-      font-weight: 730;
-      letter-spacing: -0.035em;
-    }
-
-    .sheet p {
-      margin-bottom: 17px;
-      color: var(--text-secondary);
-      line-height: 1.55;
-    }
-
-    .sheet-score {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-
-    .sheet-stat {
-      padding: 14px;
-      text-align: center;
-      border: 1px solid var(--separator);
-      border-radius: 16px;
-      background: var(--surface-soft);
-    }
-
-    .sheet-stat span {
-      display: block;
-      margin-bottom: 3px;
-      color: var(--text-tertiary);
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-
-    .sheet-stat strong {
-      font-size: 1.35rem;
-      font-weight: 750;
-    }
-
-    .sheet-button {
-      width: 100%;
-      min-height: 52px;
-      border: 0;
-      border-radius: 16px;
-      color: #ffffff;
-      background: var(--blue);
-      font-weight: 720;
-      cursor: pointer;
-    }
-
-    .confetti-layer {
-      position: fixed;
-      inset: 0;
-      z-index: 40;
-      overflow: hidden;
-      pointer-events: none;
-    }
-
-    .confetti {
-      position: absolute;
-      top: -30px;
-      width: 10px;
-      height: 18px;
-      border-radius: 3px;
-      opacity: 0;
-      animation: confettiFall var(--duration) linear forwards;
-    }
-
-    .shake {
-      animation: shake 380ms ease both;
-    }
-
-    .success-pop {
-      animation: successPop 420ms ease both;
-    }
-
-    @keyframes numberPop {
-      0% { transform: scale(1); }
-      45% { transform: scale(1.24); }
-      100% { transform: scale(1); }
-    }
-
-    @keyframes correctPulse {
-      0%, 100% { transform: scale(1); }
-      45% { transform: scale(1.018); }
-    }
-
-    @keyframes haloPulse {
-      0% {
-        opacity: 0;
-        transform: scale(0.96);
-        border-color: rgba(48, 209, 88, 0);
-      }
-      35% {
-        opacity: 1;
-        border-color: rgba(48, 209, 88, 0.72);
-      }
-      100% {
-        opacity: 0;
-        transform: scale(1.05);
-        border-color: rgba(48, 209, 88, 0);
-      }
-    }
-
-    @keyframes successPop {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.012); }
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      20% { transform: translateX(-7px); }
-      40% { transform: translateX(7px); }
-      60% { transform: translateX(-4px); }
-      80% { transform: translateX(4px); }
-    }
-
-    @keyframes confettiFall {
-      0% {
-        opacity: 1;
-        transform: translate3d(0, -30px, 0) rotate(0deg);
-      }
-      100% {
-        opacity: 0;
-        transform:
-          translate3d(var(--drift), 110svh, 0)
-          rotate(var(--rotation));
-      }
-    }
-
-    @media (max-width: 620px) {
-      .stats {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    @media (max-width: 420px) {
-      .app {
-        padding: 18px 14px;
-        border-radius: 25px;
-      }
-
-      .pad {
-        border-radius: 22px;
-      }
-
-      .subtitle {
-        font-size: 0.94rem;
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *,
-      *::before,
-      *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-      }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f2f2f7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Memory Test Pro</title>
+<style>
+:root{
+  --bg:#f2f2f7;--card:rgba(255,255,255,.82);--card2:rgba(255,255,255,.62);
+  --solid:#fff;--line:rgba(60,60,67,.12);--text:#111113;
+  --muted:rgba(60,60,67,.72);--faint:rgba(60,60,67,.44);
+  --blue:#0a84ff;--green:#30d158;--red:#ff453a;--yellow:#ffd60a;
+  --orange:#ff9f0a;--purple:#bf5af2;--cyan:#64d2ff;
+  --shadow:0 32px 80px rgba(28,28,35,.16);
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#000;--card:rgba(28,28,30,.86);--card2:rgba(44,44,46,.74);
+    --solid:#1c1c1e;--line:rgba(255,255,255,.1);--text:#fff;
+    --muted:rgba(235,235,245,.72);--faint:rgba(235,235,245,.42);
+    --shadow:0 34px 90px rgba(0,0,0,.58);
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);-webkit-text-size-adjust:100%}
+body{
+  min-height:100svh;overflow-x:hidden;color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  background:
+    radial-gradient(circle at 8% 0%,rgba(10,132,255,.18),transparent 30%),
+    radial-gradient(circle at 95% 100%,rgba(191,90,242,.12),transparent 27%),
+    radial-gradient(circle at 70% 12%,rgba(100,210,255,.08),transparent 25%),
+    var(--bg);
+}
+button{font:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.page{
+  min-height:100svh;display:grid;place-items:center;
+  padding:max(18px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right))
+          max(24px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));
+}
+.app{
+  width:min(100%,780px);position:relative;overflow:hidden;
+  padding:clamp(18px,4vw,36px);border:1px solid var(--line);border-radius:34px;
+  background:var(--card);box-shadow:var(--shadow);
+  backdrop-filter:saturate(180%) blur(30px);-webkit-backdrop-filter:saturate(180%) blur(30px);
+}
+.app:before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(145deg,rgba(255,255,255,.24),transparent 22%,transparent 76%,rgba(255,255,255,.06));
+}
+.content{position:relative;z-index:1}
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:20px}
+.eyebrow{margin-bottom:7px;color:var(--blue);font-size:.71rem;font-weight:700;letter-spacing:.105em;text-transform:uppercase}
+h1{font-size:clamp(2.15rem,8vw,3.65rem);font-weight:760;line-height:.98;letter-spacing:-.058em}
+.subtitle{max-width:650px;margin-bottom:20px;color:var(--muted);font-size:1rem;line-height:1.62}
+.sound{
+  flex:0 0 auto;display:flex;align-items:center;gap:10px;min-height:46px;
+  padding:7px 8px 7px 13px;border:1px solid var(--line);border-radius:999px;
+  color:var(--text);background:var(--card2);box-shadow:0 10px 28px rgba(0,0,0,.08);
+  cursor:pointer;transition:transform .14s ease;
+}
+.sound:active{transform:scale(.97)}
+.sound span:first-child{font-size:.83rem;font-weight:650}
+.toggle{position:relative;width:44px;height:26px;border-radius:999px;background:rgba(120,120,128,.24);transition:.18s}
+.toggle:after{
+  content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;
+  background:#fff;box-shadow:0 2px 7px rgba(0,0,0,.24);transition:transform .18s cubic-bezier(.2,.8,.2,1)
+}
+.sound.on .toggle{background:var(--green)}
+.sound.on .toggle:after{transform:translateX(18px)}
+.overview{display:grid;grid-template-columns:1.35fr .65fr;gap:12px;margin-bottom:14px}
+.panel{
+  border:1px solid var(--line);border-radius:20px;background:var(--card2);
+  box-shadow:0 10px 28px rgba(0,0,0,.07)
+}
+.progress{padding:15px}
+.progress-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:10px;font-size:.8rem;font-weight:650}
+.progress-head span:first-child{color:var(--muted)}
+.track{height:8px;overflow:hidden;border-radius:999px;background:rgba(120,120,128,.15)}
+.fill{
+  width:0;height:100%;border-radius:inherit;
+  background:linear-gradient(90deg,var(--blue),var(--cyan),var(--purple));
+  box-shadow:0 0 18px rgba(10,132,255,.35);transition:width .44s cubic-bezier(.2,.8,.2,1)
+}
+.record{padding:15px 16px;display:grid;align-content:center}
+.record small{color:var(--muted);font-size:.78rem;font-weight:650}
+.record strong{margin-top:3px;font-size:1.65rem;font-weight:760;letter-spacing:-.04em}
+.record em{margin-top:2px;color:var(--faint);font-size:.72rem;font-style:normal}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.stat{padding:14px 10px;text-align:center;border:1px solid var(--line);border-radius:17px;background:var(--card2)}
+.stat label{display:block;margin-bottom:4px;color:var(--faint);font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.stat b{font-size:1.1rem;font-weight:740}
+.message{
+  min-height:68px;display:grid;place-items:center;margin-bottom:16px;padding:14px 17px;
+  text-align:center;line-height:1.45;border:1px solid var(--line);border-radius:21px;
+  color:var(--muted);background:var(--card2);transition:.18s
+}
+.message.info{color:var(--blue);border-color:rgba(10,132,255,.18);background:rgba(10,132,255,.08)}
+.message.success{color:var(--green);border-color:rgba(48,209,88,.2);background:rgba(48,209,88,.08)}
+.message.warning{color:var(--orange);border-color:rgba(255,159,10,.2);background:rgba(255,159,10,.08)}
+.message.error{color:var(--red);border-color:rgba(255,69,58,.2);background:rgba(255,69,58,.08)}
+.board-wrap{position:relative;margin-bottom:18px}
+.board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(12px,3vw,18px)}
+.pad{
+  position:relative;min-height:clamp(132px,29vw,210px);overflow:hidden;border:0;border-radius:28px;
+  cursor:pointer;opacity:.74;user-select:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.32),0 16px 34px rgba(0,0,0,.12);
+  transition:transform .135s,filter .135s,opacity .135s,box-shadow .135s
+}
+.pad:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 28% 20%,rgba(255,255,255,.3),transparent 35%)}
+.pad:after{content:"";position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,.22),transparent 46%,rgba(0,0,0,.11))}
+.pad:disabled{cursor:default}
+.pad:active:not(:disabled),.pad.user{transform:scale(.965);opacity:1;filter:brightness(1.13)}
+.pad.active{
+  z-index:2;opacity:1;transform:scale(1.025);filter:brightness(1.56) saturate(1.06);
+  box-shadow:0 0 0 5px rgba(255,255,255,.3),0 0 52px currentColor,inset 0 0 28px rgba(255,255,255,.24)
+}
+.red{color:var(--red);background:linear-gradient(145deg,#ff6961,var(--red))}
+.blue{color:var(--blue);background:linear-gradient(145deg,#4da3ff,var(--blue))}
+.green{color:var(--green);background:linear-gradient(145deg,#58dc7a,var(--green))}
+.yellow{color:var(--yellow);background:linear-gradient(145deg,#ffe45c,var(--yellow))}
+.halo{position:absolute;inset:-8px;z-index:5;pointer-events:none;border:3px solid transparent;border-radius:35px;opacity:0}
+.halo.show{animation:halo .72s ease}
+.controls{display:grid;gap:12px}
+.start{
+  min-height:58px;border:0;border-radius:19px;color:#fff;
+  background:linear-gradient(180deg,#2f9bff,var(--blue));font-weight:720;cursor:pointer;
+  box-shadow:0 12px 28px rgba(10,132,255,.28),inset 0 1px 0 rgba(255,255,255,.28);
+  transition:transform .14s,opacity .14s
+}
+.start:active:not(:disabled){transform:scale(.98)}
+.start:disabled{opacity:.48;cursor:not-allowed}
+.segmented{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:4px;border:1px solid var(--line);border-radius:16px;background:rgba(120,120,128,.11)}
+.segment{min-height:42px;border:0;border-radius:12px;color:var(--muted);background:transparent;font-size:.88rem;font-weight:620;cursor:pointer}
+.segment.active{color:var(--text);background:var(--solid);box-shadow:0 2px 10px rgba(0,0,0,.1)}
+.segment:disabled{opacity:.55;cursor:default}
+.help{margin-top:16px;overflow:hidden;border:1px solid var(--line);border-radius:21px;background:var(--card2)}
+.help summary{min-height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 17px;cursor:pointer;font-weight:650;list-style:none}
+.help summary:after{content:"›";color:var(--faint);font-size:1.45rem;transform:rotate(90deg);transition:.18s}
+.help[open] summary:after{transform:rotate(-90deg)}
+.help summary::-webkit-details-marker{display:none}
+.help p{padding:0 17px 17px;color:var(--muted);font-size:.93rem;line-height:1.65}
+.footer{margin-top:17px;text-align:center;color:var(--faint);font-size:.75rem}
+.sheet-bg{
+  position:fixed;inset:0;z-index:30;display:grid;align-items:end;padding:14px;
+  background:rgba(0,0,0,.36);opacity:0;pointer-events:none;transition:.18s;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)
+}
+.sheet-bg.show{opacity:1;pointer-events:auto}
+.sheet{
+  width:min(100%,560px);margin:auto;padding:21px;border:1px solid var(--line);border-radius:30px;
+  background:var(--solid);box-shadow:0 26px 90px rgba(0,0,0,.34);
+  transform:translateY(30px);transition:.23s cubic-bezier(.2,.8,.2,1)
+}
+.sheet-bg.show .sheet{transform:translateY(0)}
+.handle{width:38px;height:5px;margin:0 auto 19px;border-radius:999px;background:var(--line)}
+.sheet-icon{width:60px;height:60px;display:grid;place-items:center;margin-bottom:15px;border-radius:19px;color:var(--blue);font-size:1.75rem;font-weight:750;background:rgba(10,132,255,.1)}
+.sheet-icon.win{color:var(--green);background:rgba(48,209,88,.12)}
+.sheet h2{margin-bottom:8px;font-size:1.75rem;font-weight:730;letter-spacing:-.038em}
+.sheet p{margin-bottom:18px;color:var(--muted);line-height:1.56}
+.result{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.result div{padding:15px;text-align:center;border:1px solid var(--line);border-radius:17px;background:var(--card2)}
+.result span{display:block;margin-bottom:3px;color:var(--faint);font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.result strong{font-size:1.4rem}
+.sheet button{width:100%;min-height:54px;border:0;border-radius:17px;color:#fff;background:linear-gradient(180deg,#2f9bff,var(--blue));font-weight:720;cursor:pointer}
+.confetti-layer{position:fixed;inset:0;z-index:40;overflow:hidden;pointer-events:none}
+.confetti{position:absolute;top:-30px;width:10px;height:18px;border-radius:3px;opacity:0;animation:fall var(--d) linear forwards}
+.pop{animation:pop .36s}
+.shake{animation:shake .38s}
+@keyframes pop{50%{transform:scale(1.22)}}
+@keyframes shake{20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+@keyframes halo{0%{opacity:0;transform:scale(.96)}35%{opacity:1;border-color:rgba(48,209,88,.74)}100%{opacity:0;transform:scale(1.05)}}
+@keyframes fall{0%{opacity:1;transform:translate3d(0,-30px,0) rotate(0)}100%{opacity:0;transform:translate3d(var(--x),110svh,0) rotate(var(--r))}}
+@media(max-width:620px){.overview{grid-template-columns:1fr}.record{grid-template-columns:1fr auto;align-items:center}.record strong{margin:0}.record em{grid-column:1/-1}}
+@media(max-width:460px){.app{padding:18px 14px;border-radius:26px}.topbar{align-items:center}.sound span:first-child{display:none}.sound{padding:7px}.pad{border-radius:22px}.subtitle{font-size:.94rem}}
+</style>
 </head>
-
 <body>
-  <main class="page">
-    <section class="app" id="app">
+<main class="page">
+  <section class="app" id="app">
+    <div class="content">
       <header class="topbar">
         <div>
           <div class="eyebrow">Cognitive Training</div>
           <h1>Memory Test Pro</h1>
         </div>
-
-        <button
-          class="icon-button"
-          id="soundButton"
-          type="button"
-          aria-label="Mute sound"
-          title="Sound"
-        >
-          <svg id="soundOnIcon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M3 9v6h4l5 4V5L7 9H3zm12.5 3a3.5 3.5 0 0 0-1.5-2.87v5.74A3.5 3.5 0 0 0 15.5 12zm0-7.5v2.06A7 7 0 0 1 19 12a7 7 0 0 1-3.5 6.06v2.06A9 9 0 0 0 21 12a9 9 0 0 0-5.5-7.5z"/>
-          </svg>
-
-          <svg
-            id="soundOffIcon"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            hidden
-          >
-            <path d="M3 9v6h4l5 4V5L7 9H3zm13.59 3 2.7-2.7-1.42-1.42-2.7 2.7-2.7-2.7-1.42 1.42 2.7 2.7-2.7 2.7 1.42 1.42 2.7-2.7 2.7 2.7 1.42-1.42-2.7-2.7z"/>
-          </svg>
+        <button class="sound on" id="soundButton" type="button" role="switch" aria-checked="true">
+          <span id="soundText">Sound</span><span class="toggle" aria-hidden="true"></span>
         </button>
       </header>
 
       <p class="subtitle">
-        Watch the sequence and repeat it in the correct order.
-        Every new game creates a different pattern.
+        Watch the sequence, remember the pattern, and repeat it in the correct order.
+        Every new game generates a fresh challenge.
       </p>
 
-      <section class="progress-card" aria-label="Progress">
-        <div class="progress-top">
-          <span class="progress-label">Test progress</span>
-          <span class="progress-value" id="progressValue">0 / 12</span>
+      <section class="overview">
+        <div class="panel progress">
+          <div class="progress-head"><span>Challenge progress</span><span id="progressText">0 / 12</span></div>
+          <div class="track"><div class="fill" id="progressFill"></div></div>
         </div>
-
-        <div class="progress-track">
-          <div class="progress-fill" id="progressFill"></div>
-        </div>
-      </section>
-
-      <section class="stats" aria-label="Game stats">
-        <div class="stat">
-          <span class="stat-label">Round</span>
-          <span class="stat-value" id="roundValue">0</span>
-        </div>
-
-        <div class="stat">
-          <span class="stat-label">Score</span>
-          <span class="stat-value" id="scoreValue">0</span>
-        </div>
-
-        <div class="stat">
-          <span class="stat-label">Lives</span>
-          <span class="stat-value" id="livesValue">3</span>
-        </div>
-
-        <div class="stat">
-          <span class="stat-label">Best</span>
-          <span class="stat-value" id="bestValue">0</span>
+        <div class="panel record">
+          <small>Best score</small><strong id="bestScore">0</strong><em>Saved on this device</em>
         </div>
       </section>
 
-      <div class="message info" id="messageBox" aria-live="polite">
-        Press “Start Game” to begin.
-      </div>
+      <section class="stats">
+        <div class="stat"><label>Round</label><b id="round">0</b></div>
+        <div class="stat"><label>Score</label><b id="score">0</b></div>
+        <div class="stat"><label>Lives</label><b id="lives">3</b></div>
+      </section>
 
-      <div class="board-shell">
-        <div class="success-halo" id="successHalo"></div>
+      <div class="message info" id="message">Tap “Start Game” when you are ready.</div>
 
-        <div class="board" id="board" aria-label="Color board">
+      <div class="board-wrap">
+        <div class="halo" id="halo"></div>
+        <div class="board" id="board">
           <button class="pad red" data-color="red" aria-label="Red" disabled></button>
           <button class="pad blue" data-color="blue" aria-label="Blue" disabled></button>
           <button class="pad green" data-color="green" aria-label="Green" disabled></button>
@@ -846,903 +226,227 @@
       </div>
 
       <div class="controls">
-        <button class="start-button" id="startButton" type="button">
-          Έναρξη Παιχνιδιού
-        </button>
-
-        <div class="segmented" id="difficultyControl" aria-label="Difficulty level">
-          <button class="segment active" type="button" data-level="easy">
-            Easy
-          </button>
-
-          <button class="segment" type="button" data-level="normal">
-            Normal
-          </button>
-
-          <button class="segment" type="button" data-level="hard">
-            Hard
-          </button>
+        <button class="start" id="startButton">Start Game</button>
+        <div class="segmented" id="levels">
+          <button class="segment active" data-level="easy">Easy</button>
+          <button class="segment" data-level="normal">Normal</button>
+          <button class="segment" data-level="hard">Hard</button>
         </div>
       </div>
 
       <details class="help">
         <summary>How to play</summary>
-        <p>
-          Each round adds a new color. Watch the sequence and tap the colors in the same order. You have three lives.
-          The challenge ends when you reach round 12.
-        </p>
+        <p>One new color is added every round. Watch the full sequence and repeat it in the same order. You have three lives. Complete round 12 to finish the challenge.</p>
       </details>
 
-      <p class="footer">
-        Minimal memory training • Designed for touch
-      </p>
-    </section>
-  </main>
-
-  <div class="sheet-backdrop" id="resultSheet" aria-hidden="true">
-    <section
-      class="sheet"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="sheetTitle"
-    >
-      <div class="sheet-handle"></div>
-
-      <div class="sheet-icon" id="sheetIcon">◎</div>
-
-      <h2 id="sheetTitle">Challenge complete</h2>
-
-      <p id="sheetText">
-        See your final performance and start again when you're ready.
-      </p>
-
-      <div class="sheet-score">
-        <div class="sheet-stat">
-          <span>Γύρος</span>
-          <strong id="sheetRound">0</strong>
-        </div>
-
-        <div class="sheet-stat">
-          <span>Σκορ</span>
-          <strong id="sheetScore">0</strong>
-        </div>
-      </div>
-
-      <button class="sheet-button" id="restartButton" type="button">
-        New Game
-      </button>
-    </section>
-  </div>
-
-  <div class="confetti-layer" id="confettiLayer"></div>
-
-  <script>
-    "use strict";
-
-    const COLORS = ["red", "blue", "green", "yellow"];
-    const WIN_ROUND = 12;
-
-    const DIFFICULTIES = {
-      easy: {
-        flashDuration: 690,
-        gapDuration: 275,
-        minimumFlash: 420,
-        speedStep: 12,
-        points: 10
-      },
-      normal: {
-        flashDuration: 545,
-        gapDuration: 220,
-        minimumFlash: 310,
-        speedStep: 15,
-        points: 15
-      },
-      hard: {
-        flashDuration: 425,
-        gapDuration: 165,
-        minimumFlash: 230,
-        speedStep: 17,
-        points: 20
-      }
-    };
-
-    const app = document.getElementById("app");
-    const board = document.getElementById("board");
-    const startButton = document.getElementById("startButton");
-    const restartButton = document.getElementById("restartButton");
-
-    const soundButton = document.getElementById("soundButton");
-    const soundOnIcon = document.getElementById("soundOnIcon");
-    const soundOffIcon = document.getElementById("soundOffIcon");
-
-    const difficultyControl =
-      document.getElementById("difficultyControl");
-    const difficultyButtons = [
-      ...difficultyControl.querySelectorAll(".segment")
-    ];
-
-    const messageBox = document.getElementById("messageBox");
-    const roundValue = document.getElementById("roundValue");
-    const scoreValue = document.getElementById("scoreValue");
-    const livesValue = document.getElementById("livesValue");
-    const bestValue = document.getElementById("bestValue");
-
-    const progressValue = document.getElementById("progressValue");
-    const progressFill = document.getElementById("progressFill");
-    const successHalo = document.getElementById("successHalo");
-
-    const resultSheet = document.getElementById("resultSheet");
-    const sheetIcon = document.getElementById("sheetIcon");
-    const sheetTitle = document.getElementById("sheetTitle");
-    const sheetText = document.getElementById("sheetText");
-    const sheetRound = document.getElementById("sheetRound");
-    const sheetScore = document.getElementById("sheetScore");
-
-    const confettiLayer = document.getElementById("confettiLayer");
-
-    let pads = [...document.querySelectorAll(".pad")];
-
-    let sequence = [];
-    let generatedGame = [];
-    let playerIndex = 0;
-    let round = 0;
-    let score = 0;
-    let lives = 3;
-    let difficulty = "easy";
-
-    let bestScore = Number(
-      localStorage.getItem("memoryTestProBest") || 0
-    );
-
-    let isPlaying = false;
-    let isShowingSequence = false;
-    let soundEnabled = true;
-    let sessionId = 0;
-    let audioContext = null;
-
-    const frequencies = {
-      red: 329.63,
-      blue: 261.63,
-      green: 392.00,
-      yellow: 440.00
-    };
-
-    bestValue.textContent = bestScore;
-
-    function wait(milliseconds) {
-      return new Promise(resolve => {
-        window.setTimeout(resolve, milliseconds);
-      });
-    }
-
-    function randomIndex(maximum) {
-      if (window.crypto && window.crypto.getRandomValues) {
-        const randomArray = new Uint32Array(1);
-        window.crypto.getRandomValues(randomArray);
-        return randomArray[0] % maximum;
-      }
-
-      return Math.floor(Math.random() * maximum);
-    }
-
-    function randomItem(array) {
-      return array[randomIndex(array.length)];
-    }
-
-    function shuffle(array) {
-      const result = [...array];
-
-      for (let index = result.length - 1; index > 0; index -= 1) {
-        const randomPosition = randomIndex(index + 1);
-
-        [result[index], result[randomPosition]] = [
-          result[randomPosition],
-          result[index]
-        ];
-      }
-
-      return result;
-    }
-
-    function createRandomGame(length = 100) {
-      let game;
-      const previousOpening =
-        localStorage.getItem("memoryTestProLastOpening") || "";
-
-      do {
-        game = Array.from(
-          { length },
-          () => randomItem(COLORS)
-        );
-      } while (
-        game.slice(0, 6).join(",") === previousOpening
-      );
-
-      localStorage.setItem(
-        "memoryTestProLastOpening",
-        game.slice(0, 6).join(",")
-      );
-
-      return game;
-    }
-
-    function randomizeBoardLayout() {
-      const shuffledPads = shuffle(pads);
-
-      shuffledPads.forEach(pad => {
-        board.appendChild(pad);
-      });
-
-      pads = [...board.querySelectorAll(".pad")];
-    }
-
-    function getSettings() {
-      return DIFFICULTIES[difficulty];
-    }
-
-    function getPad(color) {
-      return pads.find(
-        pad => pad.dataset.color === color
-      );
-    }
-
-    function setPadsEnabled(enabled) {
-      pads.forEach(pad => {
-        pad.disabled = !enabled;
-      });
-    }
-
-    function setDifficultyEnabled(enabled) {
-      difficultyButtons.forEach(button => {
-        button.disabled = !enabled;
-      });
-    }
-
-    function setMessage(text, type = "") {
-      messageBox.textContent = text;
-      messageBox.className = "message";
-
-      if (type) {
-        messageBox.classList.add(type);
-      }
-    }
-
-    function animateValue(element) {
-      element.classList.remove("pop");
-      void element.offsetWidth;
-      element.classList.add("pop");
-    }
-
-    function updateStats(animate = false) {
-      roundValue.textContent = round;
-      scoreValue.textContent = score;
-      livesValue.textContent = lives;
-      bestValue.textContent = bestScore;
-
-      progressValue.textContent =
-        `${Math.min(round, WIN_ROUND)} / ${WIN_ROUND}`;
-
-      progressFill.style.width =
-        `${Math.min((round / WIN_ROUND) * 100, 100)}%`;
-
-      if (animate) {
-        animateValue(roundValue);
-        animateValue(scoreValue);
-      }
-    }
-
-    function initializeAudio() {
-      if (audioContext) {
-        if (audioContext.state === "suspended") {
-          audioContext.resume().catch(() => {});
-        }
-
-        return;
-      }
-
-      const AudioContextClass =
-        window.AudioContext || window.webkitAudioContext;
-
-      if (!AudioContextClass) {
-        return;
-      }
-
-      try {
-        audioContext = new AudioContextClass();
-      } catch {
-        audioContext = null;
-      }
-    }
-
-    function playTone(
-      color,
-      duration = 160,
-      volume = 0.045
-    ) {
-      if (!soundEnabled || !audioContext) {
-        return;
-      }
-
-      try {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        const now = audioContext.currentTime;
-
-        oscillator.type = "sine";
-        oscillator.frequency.setValueAtTime(
-          frequencies[color],
-          now
-        );
-
-        gainNode.gain.setValueAtTime(0.0001, now);
-        gainNode.gain.exponentialRampToValueAtTime(
-          volume,
-          now + 0.015
-        );
-        gainNode.gain.exponentialRampToValueAtTime(
-          0.0001,
-          now + duration / 1000
-        );
-
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-
-        oscillator.start(now);
-        oscillator.stop(
-          now + duration / 1000 + 0.03
-        );
-      } catch {
-        // The game continues normally without sound.
-      }
-    }
-
-    function playErrorTone() {
-      if (!soundEnabled || !audioContext) {
-        return;
-      }
-
-      [180, 135].forEach((frequency, index) => {
-        window.setTimeout(() => {
-          try {
-            const oscillator =
-              audioContext.createOscillator();
-
-            const gainNode =
-              audioContext.createGain();
-
-            const now = audioContext.currentTime;
-
-            oscillator.type = "triangle";
-            oscillator.frequency.setValueAtTime(
-              frequency,
-              now
-            );
-
-            gainNode.gain.setValueAtTime(0.0001, now);
-            gainNode.gain.exponentialRampToValueAtTime(
-              0.05,
-              now + 0.01
-            );
-            gainNode.gain.exponentialRampToValueAtTime(
-              0.0001,
-              now + 0.18
-            );
-
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-
-            oscillator.start(now);
-            oscillator.stop(now + 0.2);
-          } catch {
-            // Το παιχνίδι συνεχίζει κανονικά χωρίς ήχο.
-          }
-        }, index * 120);
-      });
-    }
-
-    function playVictoryChord() {
-      if (!soundEnabled || !audioContext) {
-        return;
-      }
-
-      ["blue", "green", "yellow"].forEach(
-        (color, index) => {
-          window.setTimeout(() => {
-            playTone(color, 340, 0.05);
-          }, index * 120);
-        }
-      );
-    }
-
-    function flashPad(color, duration) {
-      const pad = getPad(color);
-
-      if (!pad) {
-        return;
-      }
-
-      pad.classList.add("active");
-      playTone(color, Math.min(duration, 220));
-
-      window.setTimeout(() => {
-        pad.classList.remove("active");
-      }, duration);
-    }
-
-    function getFlashDuration() {
-      const settings = getSettings();
-
-      return Math.max(
-        settings.minimumFlash,
-        settings.flashDuration -
-          (round - 1) * settings.speedStep
-      );
-    }
-
-    async function showSequence(
-      currentSession,
-      replay = false
-    ) {
-      if (
-        !isPlaying ||
-        currentSession !== sessionId
-      ) {
-        return;
-      }
-
-      isShowingSequence = true;
-      setPadsEnabled(false);
-
-      setMessage(
-        replay
-          ? "Watch the same sequence again."
-          : `Round ${round}: watch carefully.`,
-        "warning"
-      );
-
-      await wait(620);
-
-      const flashDuration = getFlashDuration();
-      const gapDuration = getSettings().gapDuration;
-
-      for (const color of sequence) {
-        if (
-          !isPlaying ||
-          currentSession !== sessionId
-        ) {
-          return;
-        }
-
-        flashPad(color, flashDuration);
-
-        await wait(
-          flashDuration + gapDuration
-        );
-      }
-
-      if (
-        !isPlaying ||
-        currentSession !== sessionId
-      ) {
-        return;
-      }
-
-      playerIndex = 0;
-      isShowingSequence = false;
-      setPadsEnabled(true);
-
-      setMessage(
-        sequence.length === 1
-          ? "Your turn. Tap the color you saw."
-          : `Your turn. Repeat ${sequence.length} colors.`,
-        "info"
-      );
-    }
-
-    async function startNextRound() {
-      round += 1;
-
-      const nextColor =
-        generatedGame[round - 1] ||
-        randomItem(COLORS);
-
-      sequence.push(nextColor);
-
-      updateStats(true);
-
-      app.classList.remove("success-pop");
-      void app.offsetWidth;
-      app.classList.add("success-pop");
-
-      await showSequence(sessionId);
-    }
-
-    function showSuccessEffect() {
-      successHalo.classList.remove("show");
-      void successHalo.offsetWidth;
-      successHalo.classList.add("show");
-
-      pads.forEach(pad => {
-        pad.classList.remove("correct");
-        void pad.offsetWidth;
-        pad.classList.add("correct");
-      });
-
-      if (
-        navigator.vibrate &&
-        typeof navigator.vibrate === "function"
-      ) {
-        navigator.vibrate(35);
-      }
-    }
-
-    async function handleCorrectSequence() {
-      setPadsEnabled(false);
-
-      const gainedPoints =
-        getSettings().points * round +
-        lives * 2;
-
-      score += gainedPoints;
-
-      if (score > bestScore) {
-        bestScore = score;
-
-        localStorage.setItem(
-          "memoryTestProBest",
-          String(bestScore)
-        );
-      }
-
-      updateStats(true);
-      showSuccessEffect();
-
-      setMessage(
-        `Correct sequence. +${gainedPoints} points.`,
-        "success"
-      );
-
-      if (round % 4 === 0 && round < WIN_ROUND) {
-        launchConfetti(26);
-      }
-
-      await wait(980);
-
-      if (!isPlaying) {
-        return;
-      }
-
-      if (round >= WIN_ROUND) {
-        completeGame();
-        return;
-      }
-
-      await startNextRound();
-    }
-
-    async function handleMistake() {
-      setPadsEnabled(false);
-
-      lives -= 1;
-      updateStats();
-
-      playErrorTone();
-
-      app.classList.remove("shake");
-      void app.offsetWidth;
-      app.classList.add("shake");
-
-      if (
-        navigator.vibrate &&
-        typeof navigator.vibrate === "function"
-      ) {
-        navigator.vibrate([45, 45, 45]);
-      }
-
-      if (lives <= 0) {
-        endGame();
-        return;
-      }
-
-      setMessage(
-        `Wrong choice. ${lives} ${
-          lives === 1 ? "life" : "lives"
-        } remaining.`,
-        "error"
-      );
-
-      await wait(1250);
-
-      if (isPlaying) {
-        await showSequence(sessionId, true);
-      }
-    }
-
-    function completeGame() {
-      isPlaying = false;
-      isShowingSequence = false;
-
-      setPadsEnabled(false);
-      setDifficultyEnabled(true);
-
-      startButton.disabled = false;
-      startButton.textContent = "Νέο Παιχνίδι";
-
-      setMessage(
-        "Challenge completed successfully.",
-        "success"
-      );
-
-      playVictoryChord();
-      launchConfetti(90);
-
-      sheetIcon.textContent = "✓";
-      sheetIcon.classList.add("success");
-
-      sheetTitle.textContent =
-        "Excellent performance";
-
-      sheetText.textContent =
-        "You completed all 12 challenge rounds.";
-
-      openResultSheet();
-    }
-
-    function endGame() {
-      isPlaying = false;
-      isShowingSequence = false;
-
-      setPadsEnabled(false);
-      setDifficultyEnabled(true);
-
-      startButton.disabled = false;
-      startButton.textContent = "Νέο Παιχνίδι";
-
-      setMessage(
-        "Challenge completed.",
-        "error"
-      );
-
-      sheetIcon.textContent = "◎";
-      sheetIcon.classList.remove("success");
-
-      sheetTitle.textContent =
-        "Challenge over";
-
-      sheetText.textContent =
-        "See your final performance and try again.";
-
-      openResultSheet();
-    }
-
-    function openResultSheet() {
-      sheetRound.textContent = round;
-      sheetScore.textContent = score;
-
-      resultSheet.classList.add("visible");
-      resultSheet.setAttribute(
-        "aria-hidden",
-        "false"
-      );
-    }
-
-    function closeResultSheet() {
-      resultSheet.classList.remove("visible");
-      resultSheet.setAttribute(
-        "aria-hidden",
-        "true"
-      );
-    }
-
-    function resetGame() {
-      sessionId += 1;
-
-      sequence = [];
-      generatedGame = createRandomGame();
-
-      playerIndex = 0;
-      round = 0;
-      score = 0;
-      lives = 3;
-
-      isPlaying = false;
-      isShowingSequence = false;
-
-      randomizeBoardLayout();
-
-      pads.forEach(pad => {
-        pad.classList.remove(
-          "active",
-          "user-active",
-          "correct"
-        );
-      });
-
-      setPadsEnabled(false);
-      updateStats();
-    }
-
-    async function startGame() {
-      initializeAudio();
-      closeResultSheet();
-      resetGame();
-
-      isPlaying = true;
-
-      startButton.disabled = true;
-      startButton.textContent =
-        "Game in progress";
-
-      setDifficultyEnabled(false);
-
-      setMessage(
-        "A new random sequence has been created.",
-        "success"
-      );
-
-      await wait(700);
-
-      if (isPlaying) {
-        await startNextRound();
-      }
-    }
-
-    function handlePadPress(pad) {
-      if (
-        !isPlaying ||
-        isShowingSequence ||
-        pad.disabled
-      ) {
-        return;
-      }
-
-      const selectedColor =
-        pad.dataset.color;
-
-      const expectedColor =
-        sequence[playerIndex];
-
-      pad.classList.add("user-active");
-      playTone(selectedColor, 140, 0.055);
-
-      window.setTimeout(() => {
-        pad.classList.remove("user-active");
-      }, 140);
-
-      if (selectedColor !== expectedColor) {
-        handleMistake();
-        return;
-      }
-
-      playerIndex += 1;
-
-      if (playerIndex === sequence.length) {
-        handleCorrectSequence();
-      } else {
-        const remaining =
-          sequence.length - playerIndex;
-
-        setMessage(
-          remaining === 1
-            ? "Correct. 1 color remaining."
-            : `Correct. ${remaining} colors remaining.`,
-          "info"
-        );
-      }
-    }
-
-    function launchConfetti(count = 60) {
-      const colors = [
-        "#0a84ff",
-        "#30d158",
-        "#ff453a",
-        "#ffd60a",
-        "#bf5af2",
-        "#64d2ff"
-      ];
-
-      for (let index = 0; index < count; index += 1) {
-        const piece = document.createElement("span");
-
-        piece.className = "confetti";
-
-        piece.style.left =
-          `${Math.random() * 100}%`;
-
-        piece.style.background =
-          randomItem(colors);
-
-        piece.style.setProperty(
-          "--duration",
-          `${2.6 + Math.random() * 1.7}s`
-        );
-
-        piece.style.setProperty(
-          "--drift",
-          `${-80 + Math.random() * 160}px`
-        );
-
-        piece.style.setProperty(
-          "--rotation",
-          `${360 + Math.random() * 720}deg`
-        );
-
-        piece.style.animationDelay =
-          `${Math.random() * 0.45}s`;
-
-        piece.style.width =
-          `${7 + Math.random() * 6}px`;
-
-        piece.style.height =
-          `${11 + Math.random() * 10}px`;
-
-        confettiLayer.appendChild(piece);
-
-        window.setTimeout(() => {
-          piece.remove();
-        }, 5000);
-      }
-    }
-
-    startButton.addEventListener(
-      "click",
-      startGame
-    );
-
-    restartButton.addEventListener(
-      "click",
-      startGame
-    );
-
-    soundButton.addEventListener("click", () => {
-      soundEnabled = !soundEnabled;
-
-      soundOnIcon.hidden = !soundEnabled;
-      soundOffIcon.hidden = soundEnabled;
-
-      soundButton.setAttribute(
-        "aria-label",
-        soundEnabled
-          ? "Mute sound"
-          : "Unmute sound"
-      );
-
-      if (soundEnabled) {
-        initializeAudio();
-        playTone("green", 120);
-      }
-    });
-
-    difficultyButtons.forEach(button => {
-      button.addEventListener("click", () => {
-        difficulty = button.dataset.level;
-
-        difficultyButtons.forEach(item => {
-          item.classList.toggle(
-            "active",
-            item === button
-          );
-        });
-      });
-    });
-
-    resultSheet.addEventListener(
-      "click",
-      event => {
-        if (event.target === resultSheet) {
-          closeResultSheet();
-        }
-      }
-    );
-
-    pads.forEach(pad => {
-      pad.addEventListener(
-        "click",
-        () => handlePadPress(pad)
-      );
-    });
-
-    updateStats();
-  </script>
+      <p class="footer">Minimal memory training • Designed for touch</p>
+    </div>
+  </section>
+</main>
+
+<div class="sheet-bg" id="sheetBg" aria-hidden="true">
+  <section class="sheet" role="dialog" aria-modal="true">
+    <div class="handle"></div>
+    <div class="sheet-icon" id="sheetIcon">◎</div>
+    <h2 id="sheetTitle">Challenge complete</h2>
+    <p id="sheetText">Review your result and try again whenever you are ready.</p>
+    <div class="result">
+      <div><span>Round</span><strong id="finalRound">0</strong></div>
+      <div><span>Score</span><strong id="finalScore">0</strong></div>
+    </div>
+    <button id="restartButton">New Game</button>
+  </section>
+</div>
+
+<div class="confetti-layer" id="confettiLayer"></div>
+
+<script>
+"use strict";
+const COLORS=["red","blue","green","yellow"],WIN=12;
+const MODES={
+  easy:{flash:700,gap:280,min:420,step:12,points:10},
+  normal:{flash:550,gap:220,min:310,step:15,points:15},
+  hard:{flash:430,gap:165,min:230,step:17,points:20}
+};
+
+const app=document.getElementById("app"),board=document.getElementById("board");
+const pads=[...document.querySelectorAll(".pad")];
+const startButton=document.getElementById("startButton"),restartButton=document.getElementById("restartButton");
+const soundButton=document.getElementById("soundButton"),soundText=document.getElementById("soundText");
+const levelButtons=[...document.querySelectorAll(".segment")];
+const roundEl=document.getElementById("round"),scoreEl=document.getElementById("score"),livesEl=document.getElementById("lives");
+const bestEl=document.getElementById("bestScore"),message=document.getElementById("message");
+const progressText=document.getElementById("progressText"),progressFill=document.getElementById("progressFill"),halo=document.getElementById("halo");
+const sheetBg=document.getElementById("sheetBg"),sheetIcon=document.getElementById("sheetIcon"),sheetTitle=document.getElementById("sheetTitle"),sheetText=document.getElementById("sheetText");
+const finalRound=document.getElementById("finalRound"),finalScore=document.getElementById("finalScore"),confettiLayer=document.getElementById("confettiLayer");
+
+let sequence=[],game=[],playerIndex=0,round=0,score=0,lives=3,mode="easy";
+let playing=false,showing=false,sound=true,session=0,audio=null;
+let best=Number(localStorage.getItem("memoryTestProBest")||0);
+bestEl.textContent=best;
+
+const freq={red:329.63,blue:261.63,green:392,yellow:440};
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+
+function rand(max){
+  if(crypto&&crypto.getRandomValues){const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]%max}
+  return Math.floor(Math.random()*max)
+}
+function randomColor(){return COLORS[rand(COLORS.length)]}
+function shuffle(items){const a=[...items];for(let i=a.length-1;i>0;i--){const j=rand(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
+function makeGame(){
+  let next,old=localStorage.getItem("memoryTestProLastOpening")||"";
+  do{next=Array.from({length:100},randomColor)}while(next.slice(0,6).join(",")===old);
+  localStorage.setItem("memoryTestProLastOpening",next.slice(0,6).join(","));
+  return next
+}
+function randomizeBoard(){shuffle(pads).forEach(p=>board.appendChild(p))}
+function setPads(enabled){pads.forEach(p=>p.disabled=!enabled)}
+function setLevels(enabled){levelButtons.forEach(b=>b.disabled=!enabled)}
+function setMessage(text,type=""){message.textContent=text;message.className="message"+(type?" "+type:"")}
+function pop(el){el.classList.remove("pop");void el.offsetWidth;el.classList.add("pop")}
+function update(animate=false){
+  roundEl.textContent=round;scoreEl.textContent=score;livesEl.textContent=lives;bestEl.textContent=best;
+  progressText.textContent=`${Math.min(round,WIN)} / ${WIN}`;
+  progressFill.style.width=`${Math.min(round/WIN*100,100)}%`;
+  if(animate){pop(roundEl);pop(scoreEl)}
+}
+function initAudio(){
+  if(audio){if(audio.state==="suspended")audio.resume().catch(()=>{});return}
+  const C=window.AudioContext||window.webkitAudioContext;
+  if(C)try{audio=new C()}catch{}
+}
+function tone(color,duration=160,volume=.045){
+  if(!sound||!audio)return;
+  try{
+    const o=audio.createOscillator(),g=audio.createGain(),now=audio.currentTime;
+    o.type="sine";o.frequency.setValueAtTime(freq[color],now);
+    g.gain.setValueAtTime(.0001,now);g.gain.exponentialRampToValueAtTime(volume,now+.015);
+    g.gain.exponentialRampToValueAtTime(.0001,now+duration/1000);
+    o.connect(g);g.connect(audio.destination);o.start(now);o.stop(now+duration/1000+.03)
+  }catch{}
+}
+function errorTone(){
+  [180,135].forEach((f,i)=>setTimeout(()=>{
+    if(!sound||!audio)return;
+    try{
+      const o=audio.createOscillator(),g=audio.createGain(),now=audio.currentTime;
+      o.type="triangle";o.frequency.setValueAtTime(f,now);
+      g.gain.setValueAtTime(.0001,now);g.gain.exponentialRampToValueAtTime(.05,now+.01);
+      g.gain.exponentialRampToValueAtTime(.0001,now+.18);
+      o.connect(g);g.connect(audio.destination);o.start(now);o.stop(now+.2)
+    }catch{}
+  },i*120))
+}
+function flash(color,duration){
+  const p=pads.find(x=>x.dataset.color===color);
+  p.classList.add("active");tone(color,Math.min(duration,220));
+  setTimeout(()=>p.classList.remove("active"),duration)
+}
+function flashTime(){
+  const s=MODES[mode];
+  return Math.max(s.min,s.flash-(round-1)*s.step)
+}
+async function showSequence(current,replay=false){
+  if(!playing||current!==session)return;
+  showing=true;setPads(false);
+  setMessage(replay?"Watch the same sequence again.":`Round ${round}: watch carefully.`,"warning");
+  await wait(620);
+  for(const color of sequence){
+    if(!playing||current!==session)return;
+    flash(color,flashTime());await wait(flashTime()+MODES[mode].gap)
+  }
+  if(!playing||current!==session)return;
+  playerIndex=0;showing=false;setPads(true);
+  setMessage(sequence.length===1?"Your turn. Tap the color you saw.":`Your turn. Repeat all ${sequence.length} colors.`,"info")
+}
+async function nextRound(){
+  round++;sequence.push(game[round-1]||randomColor());update(true);await showSequence(session)
+}
+function successEffect(){
+  halo.classList.remove("show");void halo.offsetWidth;halo.classList.add("show");
+  if(navigator.vibrate)navigator.vibrate(35)
+}
+async function correctRound(){
+  setPads(false);
+  const points=MODES[mode].points*round+lives*2;
+  score+=points;
+  if(score>best){best=score;localStorage.setItem("memoryTestProBest",String(best))}
+  update(true);successEffect();setMessage(`Sequence complete. +${points} points.`,"success");
+  if(round%4===0&&round<WIN)confetti(26);
+  await wait(980);
+  if(!playing)return;
+  if(round>=WIN){finish(true);return}
+  await nextRound()
+}
+async function mistake(){
+  setPads(false);lives--;update();errorTone();
+  app.classList.remove("shake");void app.offsetWidth;app.classList.add("shake");
+  if(navigator.vibrate)navigator.vibrate([45,45,45]);
+  if(lives<=0){finish(false);return}
+  setMessage(`Incorrect choice. ${lives} ${lives===1?"life remains":"lives remain"}.`,"error");
+  await wait(1250);if(playing)await showSequence(session,true)
+}
+function finish(won){
+  playing=false;showing=false;setPads(false);setLevels(true);
+  startButton.disabled=false;startButton.textContent="New Game";
+  sheetIcon.textContent=won?"✓":"◎";sheetIcon.classList.toggle("win",won);
+  sheetTitle.textContent=won?"Excellent performance":"Challenge complete";
+  sheetText.textContent=won?"You completed all 12 rounds of the challenge.":"Review your final result and try again when you are ready.";
+  finalRound.textContent=round;finalScore.textContent=score;
+  setMessage(won?"Challenge completed successfully.":"The challenge has ended.",won?"success":"error");
+  if(won){["blue","green","yellow"].forEach((c,i)=>setTimeout(()=>tone(c,340,.05),i*120));confetti(90)}
+  sheetBg.classList.add("show");sheetBg.setAttribute("aria-hidden","false")
+}
+function reset(){
+  session++;sequence=[];game=makeGame();playerIndex=0;round=0;score=0;lives=3;playing=false;showing=false;
+  randomizeBoard();pads.forEach(p=>p.classList.remove("active","user"));setPads(false);update()
+}
+async function start(){
+  initAudio();sheetBg.classList.remove("show");reset();playing=true;
+  startButton.disabled=true;startButton.textContent="Game in Progress";setLevels(false);
+  setMessage("A new random sequence has been generated.","success");
+  await wait(700);if(playing)await nextRound()
+}
+function press(pad){
+  if(!playing||showing||pad.disabled)return;
+  const color=pad.dataset.color,expected=sequence[playerIndex];
+  pad.classList.add("user");tone(color,140,.055);setTimeout(()=>pad.classList.remove("user"),140);
+  if(color!==expected){mistake();return}
+  playerIndex++;
+  if(playerIndex===sequence.length)correctRound();
+  else{
+    const remaining=sequence.length-playerIndex;
+    setMessage(remaining===1?"Correct. 1 color remains.":`Correct. ${remaining} colors remain.`,"info")
+  }
+}
+function confetti(count){
+  const colors=["#0a84ff","#30d158","#ff453a","#ffd60a","#bf5af2","#64d2ff"];
+  for(let i=0;i<count;i++){
+    const p=document.createElement("span");p.className="confetti";
+    p.style.left=`${Math.random()*100}%`;p.style.background=colors[rand(colors.length)];
+    p.style.setProperty("--d",`${2.6+Math.random()*1.7}s`);
+    p.style.setProperty("--x",`${-80+Math.random()*160}px`);
+    p.style.setProperty("--r",`${360+Math.random()*720}deg`);
+    p.style.animationDelay=`${Math.random()*.45}s`;
+    confettiLayer.appendChild(p);setTimeout(()=>p.remove(),5000)
+  }
+}
+
+startButton.addEventListener("click",start);
+restartButton.addEventListener("click",start);
+soundButton.addEventListener("click",()=>{
+  sound=!sound;soundButton.classList.toggle("on",sound);
+  soundButton.setAttribute("aria-checked",String(sound));
+  soundText.textContent=sound?"Sound":"Muted";
+  if(sound){initAudio();tone("green",120)}
+});
+levelButtons.forEach(b=>b.addEventListener("click",()=>{
+  mode=b.dataset.level;levelButtons.forEach(x=>x.classList.toggle("active",x===b))
+}));
+sheetBg.addEventListener("click",e=>{if(e.target===sheetBg)sheetBg.classList.remove("show")});
+pads.forEach(p=>p.addEventListener("click",()=>press(p)));
+update();
+</script>
 </body>
 </html>
