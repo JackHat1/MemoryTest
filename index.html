@@ -311,10 +311,36 @@ function update(animate=false){
   progressFill.style.width=`${Math.min(round/WIN*100,100)}%`;
   if(animate){pop(roundEl);pop(scoreEl)}
 }
-function initAudio(){
-  if(audio){if(audio.state==="suspended")audio.resume().catch(()=>{});return}
+async function unlockAudio(){
   const C=window.AudioContext||window.webkitAudioContext;
-  if(C)try{audio=new C()}catch{}
+  if(!C)return false;
+
+  try{
+    if(!audio)audio=new C();
+
+    if(audio.state==="suspended"){
+      await audio.resume();
+    }
+
+    /*
+      iOS Safari may keep Web Audio locked until audio is produced
+      directly inside a user interaction. This silent oscillator
+      unlocks the audio session without playing an audible sound.
+    */
+    const oscillator=audio.createOscillator();
+    const gain=audio.createGain();
+    const now=audio.currentTime;
+
+    gain.gain.setValueAtTime(.00001,now);
+    oscillator.connect(gain);
+    gain.connect(audio.destination);
+    oscillator.start(now);
+    oscillator.stop(now+.02);
+
+    return audio.state==="running";
+  }catch{
+    return false;
+  }
 }
 function tone(color,duration=160,volume=.045){
   if(!sound||!audio)return;
@@ -403,7 +429,7 @@ function reset(){
   randomizeBoard();pads.forEach(p=>p.classList.remove("active","user"));setPads(false);update()
 }
 async function start(){
-  initAudio();sheetBg.classList.remove("show");reset();playing=true;
+  await unlockAudio();sheetBg.classList.remove("show");reset();playing=true;
   startButton.disabled=true;startButton.textContent="Game in Progress";setLevels(false);
   setMessage("A new random sequence has been generated.","success");
   await wait(700);if(playing)await nextRound()
@@ -435,11 +461,33 @@ function confetti(count){
 
 startButton.addEventListener("click",start);
 restartButton.addEventListener("click",start);
-soundButton.addEventListener("click",()=>{
-  sound=!sound;soundButton.classList.toggle("on",sound);
+
+/* Unlock audio as early as possible on mobile Safari. */
+document.addEventListener("touchend",unlockAudio,{once:true,passive:true});
+document.addEventListener("pointerup",unlockAudio,{once:true,passive:true});
+
+document.addEventListener("visibilitychange",()=>{
+  if(!document.hidden&&sound&&audio&&audio.state==="suspended"){
+    audio.resume().catch(()=>{});
+  }
+});
+soundButton.addEventListener("click",async()=>{
+  sound=!sound;
+  soundButton.classList.toggle("on",sound);
   soundButton.setAttribute("aria-checked",String(sound));
   soundText.textContent=sound?"Sound":"Muted";
-  if(sound){initAudio();tone("green",120)}
+
+  if(sound){
+    const unlocked=await unlockAudio();
+    if(unlocked){
+      tone("green",120);
+      setMessage("Sound is enabled.","info");
+    }else{
+      setMessage("Tap Start Game once to enable sound.","warning");
+    }
+  }else{
+    setMessage("Sound is muted.","info");
+  }
 });
 levelButtons.forEach(b=>b.addEventListener("click",()=>{
   mode=b.dataset.level;levelButtons.forEach(x=>x.classList.toggle("active",x===b))
